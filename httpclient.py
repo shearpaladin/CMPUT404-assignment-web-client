@@ -24,6 +24,14 @@ import re
 # you may use urllib to encode data appropriately
 import urllib.parse
 
+#
+
+
+# Commands to run on terminal
+# python httpclient.py POST https://google.ca
+# python httpclient.py GET https://google.ca
+# python httpclient.py GET https://www.google.ca/ ### PATH doesn't pick up '/' at the end unless specified
+
 def help():
     print("httpclient.py [GET/POST] [URL]\n")
 
@@ -33,10 +41,14 @@ class HTTPResponse(object):
         self.body = body
 
 class HTTPClient(object):
-    #def get_host_port(self,url):
 
     def connect(self, host, port):
         # from Lab 2: create socket, connect, and recieve data
+
+        # If no port was specified set to port 80
+        if port == None:
+            port = 80
+
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((host, port))
@@ -53,7 +65,25 @@ class HTTPClient(object):
     def get_code(self, data):
         return None
 
-    def get_headers(self,data):
+    # curl -v curl -v https://www.google.ca showed curl/7.64.1
+    # Documentation used:
+    #https: // developer.mozilla.org/en-US/docs/Web/HTTP/Messages
+    #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
+    #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+    def get_headers(self, request_type, host, user_agent="curl/7.64.1", content_type="application/x-www-form-urlencoded"):
+
+        if "GET":
+            headers = f"""
+            User-Agent: {user_agent}\r\n
+            Host: {host}\r\n
+            Accept: */*\r\n
+            Connection: close\r\n
+            \r\n
+            """
+
+        if "POST":
+            pass
+
         return None
 
     def get_body(self, data):
@@ -81,6 +111,19 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         code = 500
         body = ""
+        print("IM MAKING A GET REQUEST")
+        parsed_url = urllib.parse.urlparse(url)
+        print(parsed_url)
+        # REMINDER set path to '/' if it blank at the end.
+        path = parsed_url.path
+        query = parsed_url.query
+
+
+        
+        
+
+
+        
 
     
         # As a developer when I GET or POST I want the result returned as a HTTPResponse object
@@ -89,6 +132,7 @@ class HTTPClient(object):
     def POST(self, url, args=None):
         code = 500
         body = ""
+        print("IM MAKING A POST REQUEST!!")
         # As a developer when I GET or POST I want the result returned as a HTTPResponse object
         return HTTPResponse(code, body)
 

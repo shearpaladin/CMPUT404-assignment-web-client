@@ -18,3 +18,9 @@ examples thus some of the code is Copyright © 2001-2013 Python
 Software Foundation; All Rights Reserved under the PSF license (GPL
 compatible) http://docs.python.org/2/library/socketserver.html
 
+Documentation Used
+========================
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
+https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+

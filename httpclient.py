@@ -36,9 +36,24 @@ class HTTPClient(object):
     #def get_host_port(self,url):
 
     def connect(self, host, port):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((host, port))
-        return None
+        # from Lab 2: create socket, connect, and recieve data
+        
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((host, port))
+
+            print(f"Connected to {host}:{port}")
+
+        except Exception as e:
+            print(e)
+            print('Hostname could not be resolved. Exiting')
+            sys.exit()
+        
+        finally:
+            #remember to close connection!
+            self.socket.close()
+    
+        return host
 
     def get_code(self, data):
         return None

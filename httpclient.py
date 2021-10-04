@@ -60,7 +60,7 @@ class HTTPClient(object):
             print('Hostname could not be resolved. Exiting')
             sys.exit()
         
-        return host
+        return self.socket
 
     def get_code(self, data):
         return None
@@ -107,11 +107,17 @@ class HTTPClient(object):
                 done = not part
         return buffer.decode('utf-8')
     
-    # 
+    # https://docs.python.org/3/library/urllib.parse.html
     def GET(self, url, args=None):
+        
+        
         code = 500
         body = ""
-        print("IM MAKING A GET REQUEST")
+
+
+        request_type = "GET"
+
+        print("-----------GET REQUEST-----------")
         parsed_url = urllib.parse.urlparse(url)
         print(parsed_url)
         # REMINDER set path to '/' if it blank at the end.
@@ -119,9 +125,11 @@ class HTTPClient(object):
         query = parsed_url.query
 
 
-        
-        
+        headers =f"""User-Agent: user_agent\r\nHost: host\r\nAccept: */*\r\nConnection: close\r\n\r\n
+        """
+        print(headers)
 
+        client_socket = self.connect(parsed_url.host,parsed_url.port)
 
         
 
@@ -132,9 +140,16 @@ class HTTPClient(object):
     def POST(self, url, args=None):
         code = 500
         body = ""
-        print("IM MAKING A POST REQUEST!!")
+
+        request_type = "POST"
+        print("---------POST REQUEST-----------")
         # As a developer when I GET or POST I want the result returned as a HTTPResponse object
         return HTTPResponse(code, body)
+
+
+
+
+
 
     def command(self, url, command="GET", args=None):
         if (command == "POST"):

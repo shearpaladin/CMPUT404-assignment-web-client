@@ -24,3 +24,4 @@ https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
 https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
 
+https://docs.python.org/3/library/urllib.parse.html

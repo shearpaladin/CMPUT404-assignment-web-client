@@ -37,7 +37,6 @@ class HTTPClient(object):
 
     def connect(self, host, port):
         # from Lab 2: create socket, connect, and recieve data
-        
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((host, port))
@@ -49,10 +48,6 @@ class HTTPClient(object):
             print('Hostname could not be resolved. Exiting')
             sys.exit()
         
-        finally:
-            #remember to close connection!
-            self.socket.close()
-    
         return host
 
     def get_code(self, data):
@@ -81,15 +76,20 @@ class HTTPClient(object):
             else:
                 done = not part
         return buffer.decode('utf-8')
-
+    
+    # 
     def GET(self, url, args=None):
         code = 500
         body = ""
-        return HTTPResponse(code, body)
+
+    
+        # As a developer when I GET or POST I want the result returned as a HTTPResponse object
+        return HTTPResponse(code, body) 
 
     def POST(self, url, args=None):
         code = 500
         body = ""
+        # As a developer when I GET or POST I want the result returned as a HTTPResponse object
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):

@@ -62,32 +62,37 @@ class HTTPClient(object):
         
         return self.socket
 
-    def get_code(self, data):
-        return None
-
     # curl -v curl -v https://www.google.ca showed curl/7.64.1
     # Documentation used:
     #https: // developer.mozilla.org/en-US/docs/Web/HTTP/Messages
     #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
     #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+    # @ args: request_type,  host
     def get_headers(self, request_type, host, user_agent="curl/7.64.1", content_type="application/x-www-form-urlencoded"):
 
-        if "GET":
-            headers = f"""
-            User-Agent: {user_agent}\r\n
-            Host: {host}\r\n
-            Accept: */*\r\n
-            Connection: close\r\n
-            \r\n
+        if request_type == "GET":
+            headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nConnection: close\r\n\r\n
             """
 
-        if "POST":
+        if request_type == "POST":
             pass
 
-        return None
+        return headers
 
+
+    def get_code(self, data):
+        # index 1 is the status code in the response
+        code = int(data.split()[1])
+        return code 
+
+    
     def get_body(self, data):
-        return None
+        try:
+            # Index 1 cause there is a empty line before
+            body = data.split("\r\n\r\n")[1]
+            return body
+        except:
+            return ""
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -110,31 +115,52 @@ class HTTPClient(object):
     # https://docs.python.org/3/library/urllib.parse.html
     def GET(self, url, args=None):
         
-        
-        code = 500
-        body = ""
-
-
-        request_type = "GET"
-
-        print("-----------GET REQUEST-----------")
         parsed_url = urllib.parse.urlparse(url)
         print(parsed_url)
-        # REMINDER set path to '/' if it blank at the end.
-        path = parsed_url.path
-        query = parsed_url.query
-
-
-        headers =f"""User-Agent: user_agent\r\nHost: host\r\nAccept: */*\r\nConnection: close\r\n\r\n
-        """
-        print(headers)
-
-        client_socket = self.connect(parsed_url.host,parsed_url.port)
-
         
+        # Variables intiated
+        request_type = "GET"
+        host = parsed_url.hostname
+        port = parsed_url.port
+        path = parsed_url.path
+        if path == "":
+            path = "/"
 
-    
-        # As a developer when I GET or POST I want the result returned as a HTTPResponse object
+        query = parsed_url.query
+        if (query == ""):
+            print("NO QUERY")
+
+        # Connect with host:port / OPEN CONNECTION
+        self.socket = self.connect(host,port)
+        
+        status_line = "GET " + path + " HTTP/1.1\r\n"
+
+        headers = self.get_headers(request_type, host)
+        request = status_line + headers
+        print("\n-----------GET REQUEST-----------")
+        print(request)
+        
+        # Send GET Request through the open connection
+        self.sendall(request)
+        
+        # Recieve data returned to the  socket
+        response = self.recvall(self.socket)
+
+        print("----------- RESPONSE -----------")
+        print(response)
+
+        # Parse response from socket
+        code = self.get_code(response)
+        body = self.get_body(response)
+
+        # CLOSE CONNECTION
+        self.close()
+
+        print(f"Code: {code}\n")
+        print("Body:\n")
+        print(body)
+
+
         return HTTPResponse(code, body) 
 
     def POST(self, url, args=None):
@@ -143,7 +169,6 @@ class HTTPClient(object):
 
         request_type = "POST"
         print("---------POST REQUEST-----------")
-        # As a developer when I GET or POST I want the result returned as a HTTPResponse object
         return HTTPResponse(code, body)
 
 

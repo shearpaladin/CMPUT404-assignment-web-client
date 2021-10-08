@@ -41,6 +41,9 @@ class HTTPResponse(object):
 class HTTPClient(object):
 
     def connect(self, host, port):
+        '''
+        Creates a socket connection to a provided host and port returns the socket when connection is established
+        '''
         # from Lab 2: create socket, connect, and recieve data
 
         # If no port was specified set to port 80
@@ -60,42 +63,19 @@ class HTTPClient(object):
         
         return self.socket
 
-    # curl -v curl -v https://www.google.ca showed curl/7.64.1
-    # Documentation used:
-    #https: // developer.mozilla.org/en-US/docs/Web/HTTP/Messages
-    #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
-    #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
-    # @ args: request_type, host, content(optional)
-    # def get_headers(self, request_type, host, content=None):
-        
-    #     user_agent = "curl/7.64.1", 
-    #     content_type = "application/x-www-form-urlencoded"
-
-    #     if request_type == "GET":
-    #         headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nConnection: close\r\n\r\n
-    #         """
-
-    #     if request_type == "POST":
-    #         # If there is content set the content_length
-    #         if content:
-    #             content_length = str(len(content))
-    #             headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:{content_length}\r\nConnection: close\r\n\r\n
-    #         """
-            
-    #         else:
-    #             headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:0\r\nConnection: close\r\n\r\n
-    #         """
-
-    #     return headers
-
-
     def get_code(self, data):
+        '''
+        Returns the status code as an integer from data
+        '''
         # index 1 is the status code in the response
         code = int(data.split()[1])
         return code 
 
     
     def get_body(self, data):
+        '''
+        Splits the body from the recieved data
+        '''
         try:
             # Index 1 cause there is a empty line before
             body = data.split("\r\n\r\n")[1]
@@ -104,13 +84,22 @@ class HTTPClient(object):
             return ""
     
     def sendall(self, data):
+        '''
+        Sends the encoded request to the server
+        '''
         self.socket.sendall(data.encode('utf-8'))
         
     def close(self):
+        '''
+        Closes socket connection
+        '''
         self.socket.close()
 
     # read everything from the socket
     def recvall(self, sock):
+        '''
+        Recieves data from the provided socket and returns it as decoded data
+        '''
         buffer = bytearray()
         done = False
         while not done:
@@ -123,6 +112,12 @@ class HTTPClient(object):
     
     # https://docs.python.org/3/library/urllib.parse.html
     def GET(self, url, args=None):
+        '''
+        Performs a GET Request by taking a specified URL and arguments(optional). 
+        1) Sends a Request
+        2) Recieves the data
+        3) Returns the data as a HTTP Response containing: status code, body
+        '''
         
         parsed_url = urllib.parse.urlparse(url)
         #print(parsed_url)
@@ -142,7 +137,7 @@ class HTTPClient(object):
 
 
         #get_request = status_line + headers
-        get_request = f"""GET {path} HTTP/1.1\r\nHost: {host}\r\nAccept-Charset: utf-8\r\nConnection: close\r\n\r\n"""
+        get_request = f"""GET {path} HTTP/1.1\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nConnection: close\r\n\r\n"""
         print("\n-----------GET REQUEST-----------")
         print(get_request)
         
@@ -165,6 +160,12 @@ class HTTPClient(object):
         return HTTPResponse(code, body) 
 
     def POST(self, url, args=None):
+        '''
+        Performs a POST Request by taking a specified URL and arguments(optional). 
+        1) Sends a Request
+        2) Recieves the data
+        3) Returns the data as a HTTP Response containing: status code, body
+        '''
        
         parsed_url = urllib.parse.urlparse(url)
         #print(parsed_url)
@@ -186,7 +187,7 @@ class HTTPClient(object):
 
 
         #post_request = = status_line + headers + content
-        post_request = f"""POST {path} HTTP/1.1\r\nHost: {host}\r\nAccept-Charset: utf-8\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {len(content)}\r\nConnection: close\r\n\r\n{content}"""
+        post_request = f"""POST {path} HTTP/1.1\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {len(content)}\r\nConnection: close\r\n\r\n{content}"""
 
         print("\n-----------POST REQUEST-----------")
         print(post_request)
@@ -209,6 +210,37 @@ class HTTPClient(object):
         body = self.get_body(response)
 
         return HTTPResponse(code, body)
+
+    # curl -v curl -v https://www.google.ca showed curl/7.64.1
+    # Documentation used:
+    #https: // developer.mozilla.org/en-US/docs/Web/HTTP/Messages
+    #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
+    #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
+    # @ args: request_type, host, content(optional)
+    def get_headers(self, request_type, host, content=None):
+        """
+        This method caused me agony and is not used. For some reason the formatting did not allow my tests to pass.
+        """
+
+        user_agent = "curl/7.64.1",
+        content_type = "application/x-www-form-urlencoded"
+
+        if request_type == "GET":
+            headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nConnection: close\r\n\r\n
+            """
+
+        if request_type == "POST":
+            # If there is content set the content_length
+            if content:
+                content_length = str(len(content))
+                headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:{content_length}\r\nConnection: close\r\n\r\n
+            """
+
+            else:
+                headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:0\r\nConnection: close\r\n\r\n
+            """
+
+        return headers
 
 
 

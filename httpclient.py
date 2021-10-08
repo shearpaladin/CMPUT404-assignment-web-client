@@ -66,28 +66,27 @@ class HTTPClient(object):
     #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
     #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
     # @ args: request_type, host, content(optional)
-    def get_headers(self, request_type, host, content=""):
+    # def get_headers(self, request_type, host, content=None):
         
-        user_agent = "curl/7.64.1", 
-        content_type = "application/x-www-form-urlencoded"
-        content_length = "0"
+    #     user_agent = "curl/7.64.1", 
+    #     content_type = "application/x-www-form-urlencoded"
 
-        if request_type == "GET":
-            headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nConnection: close\r\n\r\n
-            """
+    #     if request_type == "GET":
+    #         headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nConnection: close\r\n\r\n
+    #         """
 
-        if request_type == "POST":
-            # If there is content set the content_length
-            if content != "":
-                content_length = str(len(content))
-                headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:{content_length}\r\nConnection: close\r\n\r\n
-            """
+    #     if request_type == "POST":
+    #         # If there is content set the content_length
+    #         if content:
+    #             content_length = str(len(content))
+    #             headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:{content_length}\r\nConnection: close\r\n\r\n
+    #         """
             
-            else:
-                headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:{content_length}\r\nConnection: close\r\n\r\n
-            """
+    #         else:
+    #             headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:0\r\nConnection: close\r\n\r\n
+    #         """
 
-        return headers
+    #     return headers
 
 
     def get_code(self, data):
@@ -129,10 +128,9 @@ class HTTPClient(object):
         #print(parsed_url)
         
         # Variables intiated
-        request_type = "GET"
         host = parsed_url.hostname
         port = parsed_url.port
-        query = parsed_url.query
+
         path = parsed_url.path
         if path == "":
             path = "/"
@@ -141,21 +139,15 @@ class HTTPClient(object):
         # Connect with host:port / OPEN CONNECTION
         self.socket = self.connect(host,port)
 
-        # Add Query to path if query isn't empty
-        if (query != ""):
-            status_line = "GET " + path + query + " HTTP/1.1\r\n"
-        else:
-            status_line = "GET " + path + " HTTP/1.1\r\n"
 
 
-
-        headers = self.get_headers(request_type, host)
-        request = status_line + headers
+        #get_request = status_line + headers
+        get_request = f"""GET {path} HTTP/1.1\r\nHost: {host}\r\nAccept-Charset: utf-8\r\nConnection: close\r\n\r\n"""
         print("\n-----------GET REQUEST-----------")
-        print(request)
+        print(get_request)
         
         # Send GET Request through the open connection
-        self.sendall(request)
+        self.sendall(get_request)
         
         # Recieve data returned to the  socket
         response = self.recvall(self.socket)
@@ -163,17 +155,12 @@ class HTTPClient(object):
         print("----------- GET RESPONSE -----------")
         print(response)
 
-        # Parse response from socket
-        code = self.get_code(response)
-        body = self.get_body(response)
-
         # CLOSE CONNECTION
         self.close()
 
-        # print(f"Code: {code}\n")
-        # print("Body:\n")
-        # print(body)
-
+                # Parse response from socket
+        code = self.get_code(response)
+        body = self.get_body(response)
 
         return HTTPResponse(code, body) 
 
@@ -187,10 +174,9 @@ class HTTPClient(object):
         else:
             content = urllib.parse.urlencode(args)
 
-        request_type = "POST"
+        #request_type = "POST"
         host = parsed_url.hostname
         port = parsed_url.port
-        query = parsed_url.query
         path = parsed_url.path
         if path == "":
             path = "/"
@@ -198,24 +184,15 @@ class HTTPClient(object):
         # Connect with host:port / OPEN CONNECTION
         self.socket = self.connect(host, port)
 
-        # Add Query to path if query isn't empty
-        if (query != ""):
-            status_line = "POST " + path + query + " HTTP/1.1\r\n"
-        else:
-            status_line = "POST " + path + " HTTP/1.1\r\n"
 
-        headers = self.get_headers(request_type, host, content)
+        #post_request = = status_line + headers + content
+        post_request = f"""POST {path} HTTP/1.1\r\nHost: {host}\r\nAccept-Charset: utf-8\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {len(content)}\r\nConnection: close\r\n\r\n{content}"""
 
-        # If there is content add it along after
-        if content != "":
-            request = status_line + headers + content
-        else:
-            request = status_line + headers
         print("\n-----------POST REQUEST-----------")
-        print(request)
+        print(post_request)
 
         # Send GET Request through the open connection
-        self.sendall(request)
+        self.sendall(post_request)
 
         # Recieve data returned to the  socket
         response = self.recvall(self.socket)
@@ -223,20 +200,15 @@ class HTTPClient(object):
         print("----------- RESPONSE ------------")
         print(response)
 
-        # Parse response from socket
-        code = self.get_code(response)
-        body = self.get_body(response)
 
         # CLOSE CONNECTION
         self.close()
 
-        #print(f"Code: {code}\n")
-        #print("Body:\n")
-        #print(body)
+        # Parse response from socket
+        code = self.get_code(response)
+        body = self.get_body(response)
 
         return HTTPResponse(code, body)
-
-
 
 
 

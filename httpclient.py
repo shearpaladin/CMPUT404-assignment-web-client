@@ -24,8 +24,6 @@ import re
 # you may use urllib to encode data appropriately
 import urllib.parse
 
-#
-
 
 # Commands to run on terminal
 # python httpclient.py POST https://google.ca
@@ -67,15 +65,27 @@ class HTTPClient(object):
     #https: // developer.mozilla.org/en-US/docs/Web/HTTP/Messages
     #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
     #https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent
-    # @ args: request_type,  host
-    def get_headers(self, request_type, host, user_agent="curl/7.64.1", content_type="application/x-www-form-urlencoded"):
+    # @ args: request_type, host, content(optional)
+    def get_headers(self, request_type, host, content=""):
+        
+        user_agent = "curl/7.64.1", 
+        content_type = "application/x-www-form-urlencoded"
+        content_length = "0"
 
         if request_type == "GET":
             headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nConnection: close\r\n\r\n
             """
 
         if request_type == "POST":
-            pass
+            # If there is content set the content_length
+            if content != "":
+                content_length = str(len(content))
+                headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:{content_length}\r\nConnection: close\r\n\r\n
+            """
+            
+            else:
+                headers = f"""User-Agent: {user_agent}\r\nHost: {host}\r\nAccept: */*\r\nAccept-Charset: utf-8\r\nContent_Type: {content_type}\r\nContent-Length:{content_length}\r\nConnection: close\r\n\r\n
+            """
 
         return headers
 
@@ -116,24 +126,28 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         
         parsed_url = urllib.parse.urlparse(url)
-        print(parsed_url)
+        #print(parsed_url)
         
         # Variables intiated
         request_type = "GET"
         host = parsed_url.hostname
         port = parsed_url.port
+        query = parsed_url.query
         path = parsed_url.path
         if path == "":
             path = "/"
 
-        query = parsed_url.query
-        if (query == ""):
-            print("NO QUERY")
-
+    
         # Connect with host:port / OPEN CONNECTION
         self.socket = self.connect(host,port)
-        
-        status_line = "GET " + path + " HTTP/1.1\r\n"
+
+        # Add Query to path if query isn't empty
+        if (query != ""):
+            status_line = "GET " + path + query + " HTTP/1.1\r\n"
+        else:
+            status_line = "GET " + path + " HTTP/1.1\r\n"
+
+
 
         headers = self.get_headers(request_type, host)
         request = status_line + headers
@@ -146,7 +160,7 @@ class HTTPClient(object):
         # Recieve data returned to the  socket
         response = self.recvall(self.socket)
 
-        print("----------- RESPONSE -----------")
+        print("----------- GET RESPONSE -----------")
         print(response)
 
         # Parse response from socket
@@ -156,19 +170,70 @@ class HTTPClient(object):
         # CLOSE CONNECTION
         self.close()
 
-        print(f"Code: {code}\n")
-        print("Body:\n")
-        print(body)
+        # print(f"Code: {code}\n")
+        # print("Body:\n")
+        # print(body)
 
 
         return HTTPResponse(code, body) 
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+       
+        parsed_url = urllib.parse.urlparse(url)
+        #print(parsed_url)
+
+        if args == None:
+            content = ""
+        else:
+            content = urllib.parse.urlencode(args)
 
         request_type = "POST"
-        print("---------POST REQUEST-----------")
+        host = parsed_url.hostname
+        port = parsed_url.port
+        query = parsed_url.query
+        path = parsed_url.path
+        if path == "":
+            path = "/"
+
+        # Connect with host:port / OPEN CONNECTION
+        self.socket = self.connect(host, port)
+
+        # Add Query to path if query isn't empty
+        if (query != ""):
+            status_line = "POST " + path + query + " HTTP/1.1\r\n"
+        else:
+            status_line = "POST " + path + " HTTP/1.1\r\n"
+
+        headers = self.get_headers(request_type, host, content)
+
+        # If there is content add it along after
+        if content != "":
+            request = status_line + headers + content
+        else:
+            request = status_line + headers
+        print("\n-----------POST REQUEST-----------")
+        print(request)
+
+        # Send GET Request through the open connection
+        self.sendall(request)
+
+        # Recieve data returned to the  socket
+        response = self.recvall(self.socket)
+
+        print("----------- RESPONSE ------------")
+        print(response)
+
+        # Parse response from socket
+        code = self.get_code(response)
+        body = self.get_body(response)
+
+        # CLOSE CONNECTION
+        self.close()
+
+        #print(f"Code: {code}\n")
+        #print("Body:\n")
+        #print(body)
+
         return HTTPResponse(code, body)
 
 
